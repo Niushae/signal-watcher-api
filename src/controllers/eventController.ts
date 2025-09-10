@@ -1,7 +1,6 @@
 import { Request, Response } from 'express';
-import { events, Event } from '../models/event.js';
 import { processEventWithAI } from '../services/aiAdapter.js';
-import { v4 as uuidv4 } from 'uuid';
+import { prisma } from '../lib/db.js';
 
 export const simulateAndCreateEvent = async (req: Request, res: Response) => {
     try {
@@ -9,14 +8,14 @@ export const simulateAndCreateEvent = async (req: Request, res: Response) => {
 
         const aiResult = await processEventWithAI(DUMMY_EVENT_TEXT);
 
-        const newEvent: Event = {
-            id: uuidv4(),
-            text: DUMMY_EVENT_TEXT,
-            ...aiResult,
-            createdAt: new Date()
-        };
-        
-        events.push(newEvent);
+        const newEvent = await prisma.event.create({
+            data: {
+                text: DUMMY_EVENT_TEXT,
+                summary: aiResult.summary,
+                severity: aiResult.severity,
+                suggestedAction: aiResult.suggestedAction,
+            }
+        });
 
         res.status(201).json(newEvent);
     } catch (error) {
@@ -25,7 +24,16 @@ export const simulateAndCreateEvent = async (req: Request, res: Response) => {
     }
 };
 
-export const getEvents = (req: Request, res: Response) => {
-    const sortedEvents = [...events].sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
-    res.status(200).json(sortedEvents);
+export const getEvents = async (req: Request, res: Response) => {
+    try {
+        const sortedEvents = await prisma.event.findMany({
+            orderBy: { createdAt: 'desc' },
+            take: 20,
+        });
+        res.status(200).json(sortedEvents);
+    } catch(error) {
+        console.error("Error fetching event:", error);
+        res.status(500).json({ message: "Failed to fetch event due to an internal error." });
+    }
+
 };

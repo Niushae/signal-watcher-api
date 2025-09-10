@@ -1,0 +1,23 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Watchlist {
+  id    String @id @default(uuid())
+  name  String @unique
+  terms String[]
+}
+
+model Event {
+  id              String  @id @default(uuid())
+  text            String
+  summary         String
+  severity        String
+  suggestedAction String
+  createdAt       DateTime @default(now())
+}
