@@ -6,9 +6,9 @@
   "type": "module",
   "scripts": {
     "predev": "npm run build:prisma",
-  "dev": "tsx watch src/server.ts",
-  "build": "tsc",
-  "build:prisma": "npx prisma generate"
+    "dev": "tsx watch src/server.ts",
+    "build": "tsc",
+    "build:prisma": "npx prisma generate"
   },
   "keywords": [],
   "author": "",
@@ -31,8 +31,10 @@
   },
   "dependencies": {
     "@prisma/client": "^6.15.0",
+    "@types/uuid": "^10.0.0",
     "cors": "^2.8.5",
     "pg": "^8.16.3",
+    "pino": "^9.9.5",
     "prisma": "^6.15.0",
     "uuid": "^13.0.0"
   }
