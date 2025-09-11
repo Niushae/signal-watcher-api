@@ -1,16 +1,36 @@
 import { Request, Response } from 'express';
 import { processEventWithAI } from '../services/aiAdapter.js';
 import { prisma } from '../lib/db.js';
+import { GoogleGenerativeAI } from '@google/generative-ai';
+
+const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY as string)
 
 export const simulateAndCreateEvent = async (req: Request, res: Response) => {
     try {
-        const DUMMY_EVENT_TEXT = "Un nuevo dominio fraudulento 'secure-bank-login.net' fue registrado, simulando ser la marca 'Banco Global'.";
+        const watchlists = await prisma.watchlist.findMany();
 
-        const aiResult = await processEventWithAI(DUMMY_EVENT_TEXT);
+        if(watchlists.length === 0) {
+            return res.status(400).json({ error: 'No watchlists found to generate an event'});
+        }
+
+        const randomWatchlist = watchlists[Math.floor(Math.random() * watchlists.length)];
+        const randomTerm = randomWatchlist.terms[Math.floor(Math.random() * randomWatchlist.terms.length)]
+
+        const model = genAI.getGenerativeModel({model: "gemini-2.5-flash"});
+        const generationPrompt =  `Create a realistic, single-sentence security event description related to the term "${randomTerm}". The response should be a concise, single-sentence`;
+
+        const result = await model.generateContent(generationPrompt);
+        const dynamicEventText = result.response.text();
+
+        const aiResult = await processEventWithAI(dynamicEventText);
+
+        if (!aiResult || !aiResult.summary || !aiResult.severity || !aiResult.suggestedAction) {
+            return res.status(500).json({ message: "Failed to process event with AI. Invalid AI response." });
+        }
 
         const newEvent = await prisma.event.create({
             data: {
-                text: DUMMY_EVENT_TEXT,
+                text: dynamicEventText,
                 summary: aiResult.summary,
                 severity: aiResult.severity,
                 suggestedAction: aiResult.suggestedAction,
