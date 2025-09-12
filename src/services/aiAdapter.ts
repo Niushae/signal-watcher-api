@@ -20,15 +20,16 @@ export const processEventWithAI = async (text: string): Promise<AIResponse> => {
     const MAX_RETRIES = 3;
     for (let i = 0; i < MAX_RETRIES; i++) {
         try {
-            const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" })
+            const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" })
             const prompt = `
-            You are a security analyst AI. Analyze the following security event text and provide a response in JSON format.
+            You are a security analyst AI. Based on the following term, create a realistic, short security event summary.
+            Then, provide a severity for that event and a suggested action.
             Your response must be a JSON object with the following keys: "summary", "severity", and "suggestedAction".
-            - "summary": A brief summary of the event.
+            - "summary": A brief, realistic, security event summary related to the term.
             - "severity": Must be one of "LOW", "MEDIUM", "HIGH", or "CRITICAL".
             - "suggestedAction": A recommended action to take in response to the event.
 
-            Security Event: "${text}"
+            Term: "${text}"
 
             Provide only the JSON object in your response.
         `;
@@ -42,7 +43,6 @@ export const processEventWithAI = async (text: string): Promise<AIResponse> => {
         } catch (error) {
             console.error(`Attempt ${i + 1} failed:`, error);
             if (i < MAX_RETRIES - 1) {
-                // Wait for a few seconds before the next retry
                 await delay(2000);
             }
         }

@@ -31,3 +31,24 @@ export const getWatchlists = async (req: Request, res: Response) => {
         res.status(500).json({ error: 'Internal server error' });
     }
 };
+
+
+export const getWatchlistById = async (req: Request, res: Response) => {
+    try {
+        const { id } = req.params;
+
+        const event = await prisma.watchlist.findUnique({
+            where: { id },
+        });
+
+        if (!event) {
+            return res.status(404).json({ message: `Event with ID '${id}' not found.` });
+        }
+
+        return res.status(200).json(event);
+    } catch (error) {
+        console.error("Error getting event:", error);
+        return res.status(500).json({ message: "Failed to get event due to an internal error." });
+    }
+
+};

@@ -1,10 +1,7 @@
 import { Request, Response } from 'express';
 import { processEventWithAI } from '../services/aiAdapter.js';
 import { prisma } from '../lib/db.js';
-import { GoogleGenerativeAI } from '@google/generative-ai';
 import redis from '../lib/redis.js'
-
-const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY as string)
 
 export const simulateAndCreateEvent = async (req: Request, res: Response) => {
     try {
@@ -22,17 +19,11 @@ export const simulateAndCreateEvent = async (req: Request, res: Response) => {
 
         const randomTerm = watchlist.terms[Math.floor(Math.random() * watchlist.terms.length)];
 
-        const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
-        const generationPrompt = `Create a realistic, single-sentence security event description related to the term "${randomTerm}". The response should be a concise, single-sentence`;
-
-        const result = await model.generateContent(generationPrompt);
-        const dynamicEventText = result.response.text();
-
-        const aiResult = await processEventWithAI(dynamicEventText);
+        const aiResult = await processEventWithAI(randomTerm);
 
         const newEvent = await prisma.event.create({
             data: {
-                text: dynamicEventText,
+                watchlistId: watchlist.id,
                 summary: aiResult.summary,
                 severity: aiResult.severity,
                 suggestedAction: aiResult.suggestedAction,
@@ -74,3 +65,4 @@ export const getEvents = async (req: Request, res: Response) => {
     }
 
 };
+

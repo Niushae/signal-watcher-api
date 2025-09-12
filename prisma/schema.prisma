@@ -15,11 +15,12 @@ datasource db {
 
 model Event {
   id              String   @id @default(cuid())
-  text            String
   summary         String
   severity        String
   suggestedAction String
   createdAt       DateTime @default(now())
+  watchlistId     String
+  watchlist       Watchlist @relation(fields: [watchlistId], references: [id])
 }
 
 model Watchlist {
@@ -28,4 +29,5 @@ model Watchlist {
   updatedAt DateTime @updatedAt
   name      String   @unique
   terms     String[]
+  events          Event[]
 }
