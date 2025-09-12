@@ -8,6 +8,7 @@
     "predev": "npm run build:prisma",
     "dev": "tsx watch src/server.ts | pino-pretty",
     "build": "tsc",
+     "start": "node dist/server.js",
     "build:prisma": "npx prisma generate"
   },
   "keywords": [],
